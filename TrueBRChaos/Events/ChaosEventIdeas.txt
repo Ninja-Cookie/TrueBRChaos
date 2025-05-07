@@ -1,0 +1,22 @@
+
+// make effects save after loading and reactivate, and set their time
+// fix rarity system
+
+/*
+Color color = testColors[current];
+Color colorCurrent = Color.Lerp(color, testColors[current + 1 > 2 ? 0 : current + 1], time = Mathf.Min(time + Time.deltaTime, 1f));
+if (time == 1f) { current = current + 1 > 2 ? 0 : current + 1; time = 0f; }
+Shader.SetGlobalColor("LightColor", colorCurrent);
+Shader.SetGlobalColor("ShadowColor", colorCurrent / 2f);
+*/
+
+/*
+int current = 0;
+float time = 0.0f;
+Color[] testColors = new Color[3]
+{
+    Color.red,
+    Color.green,
+    Color.blue,
+};
+*/

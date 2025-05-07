@@ -1,0 +1,1 @@
+Add pause to timer if no events can be created.
