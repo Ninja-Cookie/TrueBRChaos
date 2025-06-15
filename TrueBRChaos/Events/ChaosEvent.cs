@@ -13,6 +13,10 @@ namespace TrueBRChaos.Events
         public abstract string  EventName { get; }
         public abstract float   EventTime { get; }
 
+        internal bool PlayIntroSound = true;
+
+        private string _name = string.Empty;
+
         public abstract EventRarities EventRarity { get; }
         public enum EventRarities
         {
@@ -51,19 +55,21 @@ namespace TrueBRChaos.Events
 
         private bool ShouldWait = false;
 
-        private void Awake()
+        internal void Init()
         {
+            _name = EventName;
+
+            CreateTimer();
+
             if (valid)
             {
-                CreateTimer();
                 StartTimer();
                 StartCoroutine(SlideIn());
             }
             else
             {
-                //Kill();
-                CreateTimer();
                 chaosTimerComp.timerActive = false;
+                chaosTimerComp.Text = "???";
 
                 chaosTimerComp.TimerForeground.Color    = UI.UIColors.dtimer_color_foreground;
                 chaosTimerComp.TimerBackground.Color    = UI.UIColors.dtimer_color_background;
@@ -87,6 +93,8 @@ namespace TrueBRChaos.Events
 
         private void StartTimer()
         {
+            chaosTimerComp.Text = _name;
+
             chaosTimerComp.TimerForeground.Color    = UI.UIColors.timer_color_foreground;
             chaosTimerComp.TimerBackground.Color    = UI.UIColors.timer_color_background;
             chaosTimerComp.TextColor                = ShouldWarn ? Color.red : Color.white;
@@ -136,10 +144,13 @@ namespace TrueBRChaos.Events
         {
             if (EventActive)
             {
-                if (ShouldWarn)
-                    ChaosAudioHandler.PlayClip(Properties.Resources.event_warning);
-                else
-                    ChaosAudioHandler.PlayClip(Properties.Resources.event_start);
+                if (PlayIntroSound)
+                {
+                    if (ShouldWarn)
+                        ChaosAudioHandler.PlayClip(Properties.Resources.event_warning);
+                    else
+                        ChaosAudioHandler.PlayClip(Properties.Resources.event_start);
+                }
 
                 OnEventStart();
             }

@@ -7,6 +7,8 @@ using static TrueBRChaos.ChaosConfig;
 using static TrueBRChaos.ChaosConfig.UI;
 using System.Collections.Generic;
 using TrueBRChaos.UI;
+using Reptile;
+using TrueBRChaos.Patches;
 
 namespace TrueBRChaos
 {
@@ -184,11 +186,14 @@ namespace TrueBRChaos
             }
         }
 
-        public static GameObject CreateChaosEvent(ChaosEvent chaosEvent)
+        public static GameObject CreateChaosEvent(ChaosEvent chaosEvent, bool playSound = true)
         {
             if (!(chaosEvent is null))
             {
                 GameObject ce = new GameObject(chaosEvent.GetType().Name, chaosEvent.GetType());
+
+                ce.GetComponent<ChaosEvent>().PlayIntroSound = playSound;
+                ce.GetComponent<ChaosEvent>().Init();
 
                 if (!chaosEvent.AllowStackingEvent || (chaosEvent.AllowStackingEvent && TimePerEvent <= ChaosEvent.EventTimes.SingleEvent))
                     RecentEvents.Add(chaosEvent);

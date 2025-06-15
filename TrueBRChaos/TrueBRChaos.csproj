@@ -119,6 +119,7 @@
     <Compile Include="Patches\EventPatch_SFX.cs" />
     <Compile Include="Patches\EventPatch_SizeChange.cs" />
     <Compile Include="Patches\EventPatch_Pitch.cs" />
+    <Compile Include="Patches\Patch_StageChange.cs" />
     <Compile Include="Patches\Patch_TestPatch.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
