@@ -1,1 +1,24 @@
-Add pause to timer if no events can be created.
+private void SetLogo(Scene previousScene, Scene activeScene)
+{
+    /*
+    if (activeScene.name == "mainMenu")
+        StartCoroutine(WaitAndSetLogo());
+    */
+}
+
+private IEnumerator WaitAndSetLogo()
+{
+    while (true)
+    {
+        /*
+        GameObject logoObject = FindObjectsOfType<GameObject>().FirstOrDefault(x => x.name == "GraffitiMiddleImage");
+        if (logoObject != null)
+        {
+            Texture2D texture = ChaosMaterialHandler.GetMaterial(Properties.Resources.logo).mainTexture as Texture2D;
+            logoObject.GetComponent<UnityEngine.UI.Image>().sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            break;
+        }
+        */
+        yield return null;
+    }
+}

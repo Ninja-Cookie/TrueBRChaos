@@ -29,7 +29,6 @@ namespace TrueBRChaos
             chaosTimer.TimerForeground  = new UIBox(chaosTimer.Position, chaosTimer._size, chaosTimer.Anchor, timer_color_foreground, chaosTimer.canvas.transform, $"TimerFore ({chaosTimer.Name})");
 
             chaosTimer.OnTimerEnd += onEndMethod;
-            //chaosTimer.timerActive = true;
 
             return go_chaosTimer;
         }

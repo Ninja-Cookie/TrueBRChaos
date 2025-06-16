@@ -1,10 +1,8 @@
 ﻿using System.Linq;
 using UnityEngine;
-using static TrueBRChaos.ChaosTimer;
 using static TrueBRChaos.ChaosConfig.UI;
 using System.Collections;
 using System;
-using Reptile;
 
 namespace TrueBRChaos.Events
 {

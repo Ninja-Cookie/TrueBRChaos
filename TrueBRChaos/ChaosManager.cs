@@ -7,8 +7,6 @@ using static TrueBRChaos.ChaosConfig;
 using static TrueBRChaos.ChaosConfig.UI;
 using System.Collections.Generic;
 using TrueBRChaos.UI;
-using Reptile;
-using TrueBRChaos.Patches;
 
 namespace TrueBRChaos
 {
@@ -140,15 +138,6 @@ namespace TrueBRChaos
                         rarity = ChaosEvent.EventRarities.Rare;
                         shouldIncludeVeryRare = rarityCheck >= 18.25f;
                     }
-
-                    /*
-                    ChaosEvent[] chaosEvents = ChaosEvents.Where
-                    (x =>
-                        !RecentEvents.Any(y => y.GetType() == x.GetType()) &&
-                        (x.AllowStackingEvent || !IsEventActive(x.GetType())) && x.EventStatePass &&
-                        (x.EventRarity == rarity || (rarity == ChaosEvent.EventRarities.Rare && x.EventRarity == ChaosEvent.EventRarities.VeryRare && ChaosManager.EventRandomCheck.Range(1, 2) == 2))
-                    ).ToArray();
-                    */
 
                     ChaosEvent[] chaosEvents = ChaosEvents.Where(x =>
                         !RecentEvents.Any(y => y.GetType() == x.GetType()) &&

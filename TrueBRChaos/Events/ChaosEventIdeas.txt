@@ -1,8 +1,12 @@
 Infinite Double Jump
 
 
-// make effects save after loading and reactivate, and set their time
-// fix rarity system
+
+
+
+
+
+
 
 /*
 Color color = testColors[current];

@@ -42,6 +42,7 @@
     <Compile Include="ChaosRandomHandler.cs" />
     <Compile Include="ChaosTimer.cs" />
     <Compile Include="Commons.cs" />
+    <Compile Include="DebugPlayground.cs" />
     <Compile Include="Encounters\Encounter_Collect.cs" />
     <Compile Include="Events\ChaosEvent.cs" />
     <Compile Include="Events\Event_BigHead.cs" />
