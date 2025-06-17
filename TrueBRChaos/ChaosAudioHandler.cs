@@ -129,7 +129,9 @@ namespace TrueBRChaos
                 AudioClip audioClip = AudioClip.Create(clipName, floatArray.Length / data.Item1, data.Item1, data.Item2, false);
                 audioClip.SetData(floatArray, 0);
 
-                AudioClips.Add(hash, audioClip);
+                // Hashing fails here and causes stuff to get the wrong audio...
+                // TODO: Fix This
+                //AudioClips.Add(hash, audioClip);
                 return audioClip;
             }
         }

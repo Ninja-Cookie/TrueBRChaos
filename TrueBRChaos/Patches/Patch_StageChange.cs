@@ -2,6 +2,7 @@
 using Reptile;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using TrueBRChaos.Events;
 
@@ -29,7 +30,8 @@ namespace TrueBRChaos.Patches
 
         private static readonly Type[] ExceptionList = new Type[]
         {
-            typeof(Events.Event_FloorLava)
+            typeof(Events.Event_FloorLava),
+            typeof(Events.Event_Score),
         };
 
         private static List<EventStatus> _chaosEvents = new List<EventStatus>();
@@ -51,7 +53,11 @@ namespace TrueBRChaos.Patches
                 ChaosEvent newEvent = ChaosManager.CreateChaosEvent(chaosEvent.ActiveChaosEvent, false)?.GetComponent<ChaosEvent>();
 
                 if (newEvent != null)
+                {
                     newEvent.chaosTimerComp.Time = chaosEvent.ActiveEventTime;
+                    if (!newEvent.EventActive)
+                        newEvent.chaosTimerComp.TimerForeground.Width = (newEvent.chaosTimerComp.Time / newEvent.chaosTimerComp.TimeMax) * newEvent.chaosTimerComp.Size.x;
+                }
             }
             _chaosEvents?.Clear();
         }

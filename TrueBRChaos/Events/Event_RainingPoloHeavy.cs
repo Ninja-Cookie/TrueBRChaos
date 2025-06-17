@@ -4,13 +4,13 @@ using static TrueBRChaos.ChaosAssetHandler;
 
 namespace TrueBRChaos.Events
 {
-    class Event_RainingPolo : ChaosEvent
+    class Event_RainingPoloHeavy : ChaosEvent
     {
-        public override string          EventName   => "Raining Polos";
+        public override string          EventName   => "Heavy Raining Polos";
         public override float           EventTime   => EventTimes.Long;
-        public override EventRarities   EventRarity => EventRarities.Uncommon;
+        public override EventRarities   EventRarity => EventRarities.Rare;
 
-        public override bool EventStatePass => !ChaosManager.IsEventActive(typeof(Event_RainingPoloHeavy));
+        public override bool EventStatePass => !ChaosManager.IsEventActive(typeof(Event_RainingPolo));
 
         private readonly BundleInfo polo    = new BundleInfo("city_assets",     "Mascot_Polo_street");
         private readonly BundleInfo poloBig = new BundleInfo("city_assets",     "Mascot_Polo_sit_big");
@@ -19,7 +19,7 @@ namespace TrueBRChaos.Events
 
         private Player      player;
 
-        private const int   maxPolos            = 300;
+        private const int   maxPolos            = 1300;
         private float       poloRainCooldownMax = 0f;
         private float       poloRainCooldown    = 0f;
 

@@ -1,7 +1,7 @@
 ﻿using Reptile;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace TrueBRChaos.Events
 {
@@ -24,10 +24,16 @@ namespace TrueBRChaos.Events
         {
             if (player != null)
             {
-                Characters      character           = player.GetValue<Characters>("character");
-                Characters[]    possibleCharacters  = Enum.GetValues(typeof(Characters)).Cast<Characters>().Where(x => x != Characters.NONE && x != Characters.MAX && x != character).ToArray();
+                Characters          character           = player.GetValue<Characters>("character");
+                List<Characters>    possibleCharacters  = Enum.GetValues(typeof(Characters)).Cast<Characters>().Where(x => x != Characters.NONE && x != Characters.MAX && x != character).ToList();
 
-                int charLength = possibleCharacters.Length;
+                if (CrewBoomHook.NewCharacterCount > 0)
+                {
+                    for (int i = 0; i < CrewBoomHook.NewCharacterCount; i++)
+                        possibleCharacters.Add(Characters.MAX + (i + 1));
+                }
+
+                int charLength = possibleCharacters.Count;
                 if (charLength > 0)
                 {
                     SetCharacter(possibleCharacters[ChaosManager.Random.Range(0, charLength, true)], ChaosManager.Random.Range(0, 3), player.GetValue<bool>("usingEquippedMovestyle"));

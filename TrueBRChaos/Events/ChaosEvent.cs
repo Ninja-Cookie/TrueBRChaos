@@ -56,7 +56,6 @@ namespace TrueBRChaos.Events
         internal void Init()
         {
             _name = EventName;
-
             CreateTimer();
 
             if (valid)
@@ -156,14 +155,14 @@ namespace TrueBRChaos.Events
 
         private void Update()
         {
-            if (EventActive && Commons.ChaosShouldRun)
+            if (!ShouldWait && EventActive && Commons.ChaosShouldRun)
             {
                 if (chaosTimerComp != null && !Plugin.DebugMode)
                     chaosTimerComp.timerActive = ChaosManager.chaosTimerComp.timerActive;
 
                 OnEventUpdate();
             }
-            else if (ShouldWait && EventStatePass)
+            else if (ShouldWait && EventStatePass && (AllowStackingEvent || !ChaosManager.IsEventActive(this.GetType()) || ChaosManager.ActiveEvents.First(x => x.GetType() == this.GetType()) == this))
             {
                 StartTimer();
                 ShouldWait = false;

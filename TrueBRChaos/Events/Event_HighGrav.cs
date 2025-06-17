@@ -2,13 +2,13 @@
 
 namespace TrueBRChaos.Events
 {
-    internal class Event_LowGrav : ChaosEvent
+    internal class Event_HighGrav : ChaosEvent
     {
-        public override string          EventName   => "Low Gravity";
+        public override string          EventName   => "High Gravity";
         public override float           EventTime   => EventTimes.Long;
         public override EventRarities   EventRarity => EventRarities.Normal;
 
-        public override bool EventStatePass => !ChaosManager.IsEventActive(typeof(Event_HighGrav));
+        public override bool EventStatePass => !ChaosManager.IsEventActive(typeof(Event_LowGrav));
 
         Player player;
 
@@ -16,7 +16,7 @@ namespace TrueBRChaos.Events
         float gravityUp;
         float slideGravityMultiplier;
 
-        const float newGravity = 0.25f;
+        const float newGravity = 2.50f;
 
         public override void OnEventAwake()
         {

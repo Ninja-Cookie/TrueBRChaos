@@ -120,7 +120,8 @@ namespace TrueBRChaos.Events
                     Core.OnUpdate -= update;
 
                     scoreEncounter.SetValue<float>("timeLimitTimer", 0f);
-                    scoreEncounter.SetEncounterState(Encounter.EncounterState.OUTRO_SUCCES);
+
+                    try { scoreEncounter.SetEncounterState(Encounter.EncounterState.OUTRO_SUCCES); } catch { }
                 }
                 Destroy(scoreAttack);
             }

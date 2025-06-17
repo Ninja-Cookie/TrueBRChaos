@@ -19,7 +19,8 @@ namespace TrueBRChaos
 
                 if (UnityEngine.Input.GetKeyDown(KeyCode.F4))
                 {
-                    TestUI.openGUI = !TestUI.openGUI;
+                    //TestUI.openGUI = !TestUI.openGUI;
+                    ChaosManager.CreateChaosEvent(typeof(Events.Event_FlingProps));
                 }
 
                 if (UnityEngine.Input.GetKeyDown(KeyCode.F5))
@@ -31,7 +32,8 @@ namespace TrueBRChaos
 
         private void RunTest()
         {
-            ChaosManager.CreateChaosEvent(typeof(Events.Event_RandomCharacter));
+            ChaosManager.CreateChaosEvent(typeof(Events.Event_GreenDemon));
+            //ChaosManager.CreateChaosEvent(typeof(Events.Event_RandomCharacter));
         }
     }
 }
