@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -53,9 +54,9 @@ namespace TrueBRChaos
             }
         }
 
-        internal static void PlayClip(UnmanagedMemoryStream stream, int mixerValue = 0, float pitch = 0f, AudioSourceID audioSource = AudioSourceID.Gameplay)
+        internal static void PlayClip(string audioName, int mixerValue = 0, float pitch = 0f, AudioSourceID audioSource = AudioSourceID.Gameplay)
         {
-            if (TryGetClip(stream, out AudioClip audioClip))
+            if (TryGetClip(audioName, out AudioClip audioClip))
                 PlayClip(audioClip, mixerValue, pitch, audioSource);
         }
 
@@ -71,7 +72,7 @@ namespace TrueBRChaos
             audioManager.InvokeMethod("PlayOneShotSfx", audioManager.GetValue<AudioMixerGroup[]>("mixerGroups")[mixerValue], audioClip, audioManager.GetValue<AudioSource[]>("audioSources")[(int)audioSource], pitch);
         }
 
-        private static bool TryGetClip(UnmanagedMemoryStream stream, out AudioClip audioClip)
+        private static bool TryGetClip(string audioName, out AudioClip audioClip)
         {
             if (!ResourcesLoaded)
             {
@@ -79,7 +80,7 @@ namespace TrueBRChaos
                 return false;
             }
 
-            int hash = stream.GetHashCode();
+            int hash = audioName.GetHashCode();
             if (AudioClips.TryGetValue(hash, out AudioClip value))
             {
                 audioClip = value;
@@ -88,14 +89,17 @@ namespace TrueBRChaos
 
             try
             {
-                audioClip = CreateAudioClipFromResource(stream, hash.ToString());
-                return true;
-            }
-            catch
-            {
-                audioClip = null;
-                return false;
-            }
+                var stream = (UnmanagedMemoryStream)typeof(Properties.Resources).GetProperties(Extensions.flags).FirstOrDefault(x => x.Name == audioName)?.GetValue(null, null);
+                if (stream != null)
+                {
+                    Debug.LogError($"Recreating {audioName}...");
+                    audioClip = CreateAudioClipFromResource(stream, hash.ToString());
+                    return true;
+                }
+            } catch { }
+
+            audioClip = null;
+            return false;
         }
 
         internal static void LoadAllResourceAudio()
@@ -113,7 +117,7 @@ namespace TrueBRChaos
 
         private static AudioClip CreateAudioClipFromResource(UnmanagedMemoryStream stream, string clipName)
         {
-            int hash = stream.GetHashCode();
+            int hash = clipName.GetHashCode();
             if (AudioClips.TryGetValue(hash, out AudioClip clip))
                 return clip;
 
@@ -129,9 +133,7 @@ namespace TrueBRChaos
                 AudioClip audioClip = AudioClip.Create(clipName, floatArray.Length / data.Item1, data.Item1, data.Item2, false);
                 audioClip.SetData(floatArray, 0);
 
-                // Hashing fails here and causes stuff to get the wrong audio...
-                // TODO: Fix This
-                //AudioClips.Add(hash, audioClip);
+                AudioClips.Add(hash, audioClip);
                 return audioClip;
             }
         }

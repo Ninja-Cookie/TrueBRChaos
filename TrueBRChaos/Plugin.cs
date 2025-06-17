@@ -12,7 +12,7 @@ namespace TrueBRChaos
         public const string pluginName      = "TrueBRChaos";
         public const string pluginVersion   = "0.1.0";
 
-        public static bool DebugMode = false;
+        public static bool DebugMode = true;
 
         public void Awake()
         {

@@ -144,9 +144,9 @@ namespace TrueBRChaos.Events
                 if (PlayIntroSound)
                 {
                     if (ShouldWarn)
-                        ChaosAudioHandler.PlayClip(Properties.Resources.event_warning);
+                        ChaosAudioHandler.PlayClip(nameof(Properties.Resources.event_warning));
                     else
-                        ChaosAudioHandler.PlayClip(Properties.Resources.event_start);
+                        ChaosAudioHandler.PlayClip(nameof(Properties.Resources.event_start));
                 }
 
                 OnEventStart();
