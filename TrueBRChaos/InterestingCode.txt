@@ -26,44 +26,57 @@ private IEnumerator WaitAndSetLogo()
 
 // Save a screenshot and show it
 // ---------------------------------------------------------------------------------------------------
-private void CaptureScreenshot()
+RenderTexture cameraTexture;
+
+internal void CaptureScreenshot()
 {
-    cameraTexture = new RenderTexture(1920, 1080, 32, RenderTextureFormat.Default);
-    cameraTexture.name = "CameraRenderTexture";
+    // Set up RenderTexture:
+    cameraTexture                   = new RenderTexture(Screen.width, Screen.height, 32, RenderTextureFormat.Default);
     cameraTexture.enableRandomWrite = true;
     cameraTexture.Create();
 
-    var texture = Commons.CurrentCamera.targetTexture;
+    // Capture current camera texture to restore later:
+    var currentCameraTexture = Commons.CurrentCamera.targetTexture;
 
+    // Replace camera target texture with the RenderTexture:
     Commons.CurrentCamera.targetTexture = cameraTexture;
     Commons.CurrentCamera.Render();
 
+    // Read the RenderTexture and get the pixels of the display:
     RenderTexture.active = cameraTexture;
-    texture2D = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
-    texture2D.ReadPixels(new Rect(0f, 0f, (float)1920, (float)1080), 0, 0);
-    texture2D.Apply();
+    Texture2D cameraOverlayTexture = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
+    cameraOverlayTexture.ReadPixels(new Rect(0f, 0f, (float)1920, (float)1080), 0, 0);
+    cameraOverlayTexture.Apply();
     RenderTexture.active = null;
 
-    Commons.CurrentCamera.targetTexture = texture;
+    // Restore the camera texture:
+    Commons.CurrentCamera.targetTexture = currentCameraTexture;
     Commons.CurrentCamera.Render();
 
+    // Release RenderTexture
     cameraTexture.Release();
 }
 
-public void ShowCapturedTexture()
+internal void ShowCapturedScreenshot(Texture2D screenshot)
 {
-    Canvas canvas = Commons.UIManager.GetValue<Canvas>("canvas");
+    // Get the canvas:
+    Canvas canvas = Commons.UIManager?.GetValue<Canvas>("canvas");
+    if (canvas == null)
+        return;
 
+    // Set up a GameObject for the texture to apply to:
     GameObject rawImageGO = new GameObject("CameraTextureDisplay");
     rawImageGO.transform.SetParent(canvas.transform);
     var rawImage = rawImageGO.AddComponent<RawImage>();
 
+    // Adjust the anchor:
     RectTransform rect = rawImage.GetComponent<RectTransform>();
     rect.anchorMin = Vector2.zero;
     rect.anchorMax = Vector2.one;
     rect.offsetMin = Vector2.zero;
     rect.offsetMax = Vector2.zero;
 
-    rawImage.texture = texture2D;
+    // Set the overlay:
+    rawImage.texture = screenshot;
 }
 // ---------------------------------------------------------------------------------------------------
