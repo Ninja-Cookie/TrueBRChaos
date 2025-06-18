@@ -58,6 +58,8 @@
     <Compile Include="Events\Event_Bounce.cs" />
     <Compile Include="Events\Event_BrokeAnimations.cs" />
     <Compile Include="Events\Event_AutoBhop.cs" />
+    <Compile Include="Events\Event_DogSounds.cs" />
+    <Compile Include="Events\Event_ExplodingPeds.cs" />
     <Compile Include="Events\Event_Hyper.cs" />
     <Compile Include="Events\Event_InfJumps.cs" />
     <Compile Include="Events\Event_HighGrav.cs" />
@@ -131,6 +133,7 @@
     <Compile Include="Patches\EventPatch_SizeChange.cs" />
     <Compile Include="Patches\EventPatch_Pitch.cs" />
     <Compile Include="Patches\Patch_StageChange.cs" />
+    <Compile Include="Patches\EventPatch_ExplodingPeds.cs" />
     <Compile Include="Patches\Patch_TestPatch.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -161,6 +164,7 @@
     <None Include="Resources\test_sound_explosion.wav" />
     <None Include="Resources\event_start.wav" />
     <None Include="Resources\event_warning.wav" />
+    <Content Include="InterestingCode.txt" />
     <Content Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -256,6 +260,10 @@
     <Reference Include="UnityEngine.InputModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\CommonLibs\Minimal\UnityEngine.InputModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\CommonLibs\UnityEngine.ParticleSystemModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
