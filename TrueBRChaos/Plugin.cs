@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
 using Reptile;
-using UnityEngine;
 
 namespace TrueBRChaos
 {
@@ -12,18 +11,12 @@ namespace TrueBRChaos
         public const string pluginName      = "TrueBRChaos";
         public const string pluginVersion   = "0.1.0";
 
-        public static bool DebugMode = false;
+        public static bool DebugMode = true;
 
         public void Awake()
         {
             var harmony = new Harmony(pluginGuid);
             harmony.PatchAll();
-
-            if (DebugMode)
-            {
-                GameObject assetAssistant = new GameObject("AssetAssistant", typeof(TestUI));
-                DontDestroyOnLoad(assetAssistant);
-            }
 
             LoadResources();
             Core.OnCoreInitialized += LoadChaos;

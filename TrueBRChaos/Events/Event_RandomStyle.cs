@@ -30,7 +30,7 @@ namespace TrueBRChaos.Events
 
         public override void OnEventStart()
         {
-            bool canIncludeSpecial = ChaosManager.Random.Range(1, 3) == 1;
+            bool canIncludeSpecial = ChaosManager.Random.Range(1, 7) == 1;
             Styles[] styles = ((Styles[])Enum.GetValues(typeof(Styles))).Where(x => (x != Styles.Special || canIncludeSpecial) && (MoveStyle)x != player.GetValue<MoveStyle>("moveStyleEquipped")).ToArray();
             MoveStyle style = (MoveStyle)styles[ChaosManager.Random.Range(0, styles.Length, true)];
 
