@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace TrueBRChaos.UI
 {
-    public class UICanvas
+    internal class UICanvas
     {
         public UICanvas(string name = "Canvas", int sortOrder = 90000, RenderMode renderMode = RenderMode.ScreenSpaceOverlay, params Type[] components)
         {

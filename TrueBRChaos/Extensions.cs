@@ -5,7 +5,7 @@ using System;
 
 namespace TrueBRChaos
 {
-    public static class Extensions
+    internal static class Extensions
     {
         public static BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static;
 

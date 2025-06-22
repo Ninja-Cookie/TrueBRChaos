@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TrueBRChaos.Abilities
 {
-    public class Ability_DanceOverride : Ability
+    internal class Ability_DanceOverride : Ability
     {
         public Ability_DanceOverride(Player player) : base(player)
         {

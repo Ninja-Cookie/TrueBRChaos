@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace TrueBRChaos
 {
-    public static class Commons
+    internal static class Commons
     {
         public static float Delta       => Time.deltaTime / Time.timeScale;
         public static float DeltaFixed  => Time.fixedDeltaTime / Time.timeScale;

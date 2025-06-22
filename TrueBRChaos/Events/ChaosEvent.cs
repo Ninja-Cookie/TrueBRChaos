@@ -6,7 +6,7 @@ using System;
 
 namespace TrueBRChaos.Events
 {
-    internal abstract class ChaosEvent : MonoBehaviour
+    public abstract class ChaosEvent : MonoBehaviour
     {
         public abstract string  EventName { get; }
         public abstract float   EventTime { get; }
@@ -42,8 +42,8 @@ namespace TrueBRChaos.Events
 
         public virtual bool ShouldWarn => false;
 
-        private GameObject chaosTimer;
-        public  ChaosTimer chaosTimerComp;
+        private     GameObject chaosTimer;
+        internal    ChaosTimer chaosTimerComp;
 
         private bool valid => (this.AllowStackingEvent || !ChaosManager.IsEventActive(this.GetType())) && EventStatePass;
         public  bool EventActive    { get; private set; }

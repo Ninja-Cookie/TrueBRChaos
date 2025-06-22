@@ -142,6 +142,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="TwitchControl.cs" />
     <Compile Include="UI\ChaosGUIFunctions.cs" />
     <Compile Include="UI\ChaosGUI.cs" />
     <Compile Include="UI\UIBox.cs" />

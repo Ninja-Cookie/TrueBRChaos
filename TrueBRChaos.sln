@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrueBRChaos", "TrueBRChaos\TrueBRChaos.csproj", "{3F675F38-7FBB-4EF2-94E2-078813AE4F84}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitchChaos", "TwitchChaos\TwitchChaos.csproj", "{3B0F6A09-E232-4ACF-A71B-2B457B876670}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{3F675F38-7FBB-4EF2-94E2-078813AE4F84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F675F38-7FBB-4EF2-94E2-078813AE4F84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3F675F38-7FBB-4EF2-94E2-078813AE4F84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B0F6A09-E232-4ACF-A71B-2B457B876670}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B0F6A09-E232-4ACF-A71B-2B457B876670}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B0F6A09-E232-4ACF-A71B-2B457B876670}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B0F6A09-E232-4ACF-A71B-2B457B876670}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

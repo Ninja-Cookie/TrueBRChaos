@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TrueBRChaos.Abilities
 {
-    public class Ability_Freeze : Ability
+    internal class Ability_Freeze : Ability
     {
         public Ability_Freeze(Player player, int animHash, float animTime) : base(player)
         {

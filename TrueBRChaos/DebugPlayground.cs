@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 
 namespace TrueBRChaos
 {
-    public partial class Plugin
+    internal partial class Plugin
     {
         public void Update()
         {
@@ -34,9 +34,6 @@ namespace TrueBRChaos
                 }
             }
         }
-
-        RenderTexture cameraTexture;
-        Texture2D texture2D;
 
         private void RunTest()
         {
