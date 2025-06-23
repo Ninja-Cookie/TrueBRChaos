@@ -44,27 +44,43 @@ namespace TwitchChaos
             }
         }
 
+        private static TwitchWebSocket TwitchSocket;
+
         internal static void StartWebSocket(string clientID, string OAuth)
         {
-            if (CurrentSocketState == SocketState.Disconnected)
+            if (TwitchSocket == null)
             {
-                OnConnectedToSocket += WaitForGame;
-                OnPollEnd           += HandlePollResult;
-                ConnectToWebSocket(clientID, OAuth);
+                TwitchSocket = new TwitchWebSocket();
+
+                TwitchSocket.OnConnectedToSocket        += WaitForGame;
+                TwitchSocket.OnDisconnectedFromSocket   += EndWebSocket;
+                TwitchSocket.OnPollEnd                  += HandlePollResult;
+                TwitchSocket.ConnectToWebSocket(clientID, OAuth);
             }
         }
 
         internal static void EndWebSocket()
         {
-            DisconnectFromWebSocket();
+            if (TwitchSocket == null)
+                return;
+
+            TwitchSocket.OnConnectedToSocket        -= WaitForGame;
+            TwitchSocket.OnDisconnectedFromSocket   -= EndWebSocket;
+            TwitchSocket.OnPollEnd                  -= HandlePollResult;
+
+            TwitchSocket.DisconnectFromWebSocket();
+            TwitchSocket = null;
         }
 
         private async static void WaitForGame()
         {
-            OnConnectedToSocket -= WaitForGame;
+            if (TwitchSocket == null)
+                return;
+
+            TwitchSocket.OnConnectedToSocket -= WaitForGame;
 
             while (!TwitchControl.EventCanBeCreated) { await Task.Delay(TimeSpan.FromSeconds(0.1f)); }
-            if (CurrentSocketState == SocketState.Connected)
+            if (TwitchSocket != null && TwitchSocket.CurrentSocketState == SocketState.Connected)
                 RunVote();
         }
 
@@ -94,12 +110,12 @@ namespace TwitchChaos
 
         private async static Task StartPoll(Poll poll)
         {
-            if (CurrentSocketState != SocketState.Connected || CurrentTwitchUserInfo == null)
+            if (TwitchSocket == null || TwitchSocket.CurrentSocketState != SocketState.Connected || TwitchSocket.CurrentTwitchUserInfo == null)
                 return;
 
             var body = new
             {
-                broadcaster_id = CurrentTwitchUserInfo.id,
+                broadcaster_id = TwitchSocket.CurrentTwitchUserInfo.id,
                 title       = poll.Title,
                 choices     = poll.Options,
                 duration    = poll.Duration
@@ -108,7 +124,7 @@ namespace TwitchChaos
             if (body.choices == null || body.choices.Length == 0)
                 return;
 
-            string reply = await SendWebRequest(URL_API_POLL, RequestType.POST, JsonNet.Serialize(body));
+            string reply = await TwitchSocket.SendWebRequest(URL_API_POLL, RequestType.POST, JsonNet.Serialize(body));
 
             if (!string.IsNullOrEmpty(reply))
             {

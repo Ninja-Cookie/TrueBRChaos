@@ -13,16 +13,19 @@ using static TwitchChaos.TwitchWebReply;
 
 namespace TwitchChaos
 {
-    internal static class TwitchWebSocket
+    internal sealed class TwitchWebSocket
     {
-        internal delegate   void    ConnectedToSocket();
-        internal static     event   ConnectedToSocket OnConnectedToSocket;
+        internal delegate void  ConnectedToSocket();
+        internal event          ConnectedToSocket OnConnectedToSocket;
 
-        internal delegate   void    PollEnd(string id, string winner);
-        internal static     event   PollEnd OnPollEnd;
+        internal delegate void  DisconnectedFromSocket();
+        internal event          DisconnectedFromSocket OnDisconnectedFromSocket;
 
-        private     static SocketState _currentSocketState = SocketState.Disconnected;
-        internal    static SocketState CurrentSocketState
+        internal delegate void  PollEnd(string id, string winner);
+        internal event          PollEnd OnPollEnd;
+
+        private     SocketState _currentSocketState = SocketState.Disconnected;
+        internal    SocketState CurrentSocketState
         {
             get => _currentSocketState;
 
@@ -36,15 +39,21 @@ namespace TwitchChaos
                             _currentSocketState = value;
                             CancelToken = new CancellationTokenSource();
                             OnConnectedToSocket?.Invoke();
+                            return;
                         }
                     break;
 
                     case SocketState.Disconnected:
-                        CurrentTwitchUserInfo   = null;
-                        CancelToken?.Dispose();
-                        CancelToken             = null;
-                        OnConnectedToSocket     = null;
-                        OnPollEnd               = null;
+                        if (_currentSocketState != value)
+                        {
+                            CurrentTwitchUserInfo   = null;
+                            CancelToken?.Dispose();
+                            CancelToken             = null;
+                            OnConnectedToSocket     = null;
+                            OnPollEnd               = null;
+
+                            OnDisconnectedFromSocket?.Invoke();
+                        }
                     break;
                 }
 
@@ -66,8 +75,8 @@ namespace TwitchChaos
             GET
         }
 
-        internal static API_Users.Data  CurrentTwitchUserInfo;
-        private static ClientInfo       CurrentClientInfo;
+        internal API_Users.Data  CurrentTwitchUserInfo;
+        private ClientInfo       CurrentClientInfo;
         private class ClientInfo
         {
             internal string ClientID    { get; private set; }
@@ -80,11 +89,11 @@ namespace TwitchChaos
             }
         }
 
-        private static SocketReply.Payload.Session CurrentSessionInfo;
+        private SocketReply.Payload.Session CurrentSessionInfo;
 
-        private static CancellationTokenSource CancelToken;
+        private CancellationTokenSource CancelToken;
 
-        internal static void ConnectToWebSocket(string clientID, string OAuth)
+        internal void ConnectToWebSocket(string clientID, string OAuth)
         {
             if (CurrentSocketState == SocketState.Disconnected)
             {
@@ -93,7 +102,7 @@ namespace TwitchChaos
             }
         }
 
-        internal static void DisconnectFromWebSocket()
+        internal void DisconnectFromWebSocket()
         {
             if (CurrentSocketState == SocketState.Disconnected || CurrentSocketState == SocketState.Disconnecting)
                 return;
@@ -102,7 +111,7 @@ namespace TwitchChaos
             CancelToken?.Cancel();
         }
 
-        private static async void Connect()
+        private async void Connect()
         {
             CurrentSocketState = SocketState.Connecting;
             if (await CreateUserInfo() == null)
@@ -115,7 +124,7 @@ namespace TwitchChaos
             CurrentSocketState = SocketState.Disconnected;
         }
 
-        private static async Task RunWebSocket()
+        private async Task RunWebSocket()
         {
             using (var socket = new ClientWebSocket())
             {
@@ -159,7 +168,7 @@ namespace TwitchChaos
             }
         }
 
-        private static async Task HandleReply(SocketReply reply)
+        private async Task HandleReply(SocketReply reply)
         {
             if (reply?.metadata?.message_type == null)
                 return;
@@ -180,7 +189,7 @@ namespace TwitchChaos
             }
         }
 
-        private async static Task CreateSession(SocketReply reply)
+        private async Task CreateSession(SocketReply reply)
         {
             if (CurrentSessionInfo != null || CurrentTwitchUserInfo == null || reply?.payload?.session == null)
                 return;
@@ -190,7 +199,7 @@ namespace TwitchChaos
                 await Subscribe(EventSubs.OnPollEnd, CurrentTwitchUserInfo.id, CurrentSessionInfo.id);
         }
 
-        private async static Task Subscribe(string subEvent, string broadcasterID, string sessionID)
+        private async Task Subscribe(string subEvent, string broadcasterID, string sessionID)
         {
             var body = new
             {
@@ -207,7 +216,7 @@ namespace TwitchChaos
             await SendWebRequest(URL_API_SUB, RequestType.POST, JsonNet.Serialize(body));
         }
 
-        private static void HandlePollEnd(SocketReply.Payload.PollEvent pollEvent)
+        private void HandlePollEnd(SocketReply.Payload.PollEvent pollEvent)
         {
             if (pollEvent == null || pollEvent.choices == null || pollEvent.choices.Length == 0 || pollEvent.status != PollStatus.completed.ToString())
                 return;
@@ -218,7 +227,7 @@ namespace TwitchChaos
             OnPollEnd?.Invoke(pollEvent.id, pollEvent.choices.First(x => x.votes == votes.Max()).title);
         }
 
-        private static async Task<API_Users.Data> CreateUserInfo()
+        private async Task<API_Users.Data> CreateUserInfo()
         {
             string response = await SendWebRequest(URL_API_USERS, RequestType.GET);
             if (response == null)
@@ -227,7 +236,7 @@ namespace TwitchChaos
             return CurrentTwitchUserInfo = JsonNet.Deserialize<API_Users>(response)?.data?.FirstOrDefault();
         }
 
-        internal static async Task<string> SendWebRequest(string URL, RequestType requestType, string body = null)
+        internal async Task<string> SendWebRequest(string URL, RequestType requestType, string body = null)
         {
             if (CurrentClientInfo == null)
                 return string.Empty;
