@@ -1,0 +1,1 @@
+Check if poll is already activev before creating

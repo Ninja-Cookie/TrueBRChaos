@@ -52,14 +52,14 @@ namespace TwitchChaos
             {
                 TwitchSocket = new TwitchWebSocket();
 
-                TwitchSocket.OnConnectedToSocket        += WaitForGame;
+                TwitchSocket.OnConnectedToSocket        += OnConnected;
                 TwitchSocket.OnDisconnectedFromSocket   += EndWebSocket;
                 TwitchSocket.OnPollEnd                  += HandlePollResult;
                 TwitchSocket.ConnectToWebSocket(clientID, OAuth);
             }
         }
 
-        internal static void EndWebSocket()
+        internal static async void EndWebSocket()
         {
             if (TwitchSocket == null)
                 return;
@@ -68,8 +68,15 @@ namespace TwitchChaos
             TwitchSocket.OnDisconnectedFromSocket   -= EndWebSocket;
             TwitchSocket.OnPollEnd                  -= HandlePollResult;
 
-            TwitchSocket.DisconnectFromWebSocket();
+            await TwitchSocket.DisconnectFromWebSocket();
+            TwitchControl.IsConnectedToTwitch = false;
             TwitchSocket = null;
+        }
+
+        private static void OnConnected()
+        {
+            TwitchControl.IsConnectedToTwitch = true;
+            WaitForGame();
         }
 
         private async static void WaitForGame()

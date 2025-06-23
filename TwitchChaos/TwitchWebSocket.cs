@@ -102,13 +102,15 @@ namespace TwitchChaos
             }
         }
 
-        internal void DisconnectFromWebSocket()
+        internal async Task DisconnectFromWebSocket()
         {
             if (CurrentSocketState == SocketState.Disconnected || CurrentSocketState == SocketState.Disconnecting)
                 return;
 
             CurrentSocketState = SocketState.Disconnecting;
             CancelToken?.Cancel();
+
+            while (CurrentSocketState != SocketState.Disconnected) { await Task.Delay(TimeSpan.FromSeconds(0.1f)); }
         }
 
         private async void Connect()

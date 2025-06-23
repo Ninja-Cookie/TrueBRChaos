@@ -24,6 +24,19 @@ namespace TrueBRChaos
             }
         }
 
+        private static bool _isConnectedToTwitch = false;
+        public static bool IsConnectedToTwitch
+        {
+            get => _isConnectedToTwitch;
+            set
+            {
+                _isConnectedToTwitch = value;
+
+                if (ChaosManager.TwitchText?.TextPro != null)
+                    ChaosManager.TwitchText.TextPro.enabled = IsConnectedToTwitch;
+            }
+        }
+
         public static ChaosEvent[]      ChaosEvents         => ChaosManager.ChaosEvents;
         public static List<ChaosEvent>  ActiveChaosEvents   => ChaosManager.ActiveEvents;
         public static bool              EventCanBeCreated   => Commons.ChaosShouldRun;
@@ -36,6 +49,9 @@ namespace TrueBRChaos
 
         internal static void SetTwitchControl(bool state)
         {
+            if (IsConnectedToTwitch == state)
+                return;
+
             ChaosManager.chaosTimerComp.forceTimerDisabled = state;
             HasTwitchControl = state;
         }

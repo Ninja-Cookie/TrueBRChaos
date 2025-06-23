@@ -11,10 +11,13 @@ namespace TrueBRChaos
     {
         public void Update()
         {
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F1))
+                RunTest();
+
             if (DebugMode)
             {
-                if (UnityEngine.Input.GetKeyDown(KeyCode.F1))
-                    RunTest();
+                //if (UnityEngine.Input.GetKeyDown(KeyCode.F1))
+                //    RunTest();
 
                 if (UnityEngine.Input.GetKeyDown(KeyCode.F3))
                 {

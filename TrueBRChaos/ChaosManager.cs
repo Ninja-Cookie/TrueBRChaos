@@ -33,6 +33,8 @@ namespace TrueBRChaos
         private static ChaosRandomHandler EventRandom;
         private static ChaosRandomHandler EventRandomCheck;
 
+        internal static UIText TwitchText;
+
         public static void AddActiveEvent(ChaosEvent chaosEvent)
         {
             ActiveEvents.Add(chaosEvent);
@@ -84,6 +86,9 @@ namespace TrueBRChaos
             GameObject chaosGUI_GO = new GameObject("chaosGUI", typeof(ChaosGUI));
             chaosGUI = chaosGUI_GO.GetComponent<ChaosGUI>();
             GameObject.DontDestroyOnLoad(chaosGUI_GO);
+
+            TwitchText = new UIText(new Vector2(Screen.width * 0.5f, Screen.height - (Timer_Height * 0.5f)), new Vector2(Screen.width, Timer_Height), new Vector2(0.5f, 0.5f), new Color(0.537f, 0.337f, 0.984f), TMPro.TextAlignmentOptions.Center, 18, "Connected to Twitch", canvas.Canvas.transform, outlineColor: Color.black);
+            TwitchText.TextPro.enabled = false;
         }
 
         public static void InitSeed(int seed)
