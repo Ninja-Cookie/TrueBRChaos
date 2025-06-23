@@ -1,0 +1,1 @@
+Convert TwitchWebSocket to a non-static class. Might resolve the issue of reconnecting failing?

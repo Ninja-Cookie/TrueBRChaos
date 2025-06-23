@@ -49,6 +49,7 @@ namespace TrueBRChaos
         public event TimerEnd OnTimerEnd;
 
         public bool timerActive = false;
+        public bool forceTimerDisabled = false;
 
         public  float   TimeMax = 30f;
         public  float   Time    = 30f;
@@ -210,7 +211,7 @@ namespace TrueBRChaos
 
         public void Update()
         {
-            if (timerActive && ChaosShouldRun)
+            if (timerActive && ChaosShouldRun && !forceTimerDisabled)
             {
                 TimerForeground.Width = (Time / TimeMax) * Size.x;
                 UpdateColor();

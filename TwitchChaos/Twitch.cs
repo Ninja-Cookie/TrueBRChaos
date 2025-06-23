@@ -1,37 +1,21 @@
 ﻿using Json.Net;
 using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Reflection;
 using System.Threading.Tasks;
 using TrueBRChaos;
 using TrueBRChaos.Events;
-using UnityEngine;
-using static TwitchChaos.DebugOutput;
-using static TwitchChaos.Twitch;
+using static TwitchChaos.TwitchWebReply;
+using static TwitchChaos.TwitchWebReply.SocketReply.Payload.PollEvent;
+using static TwitchChaos.TwitchWebSocket;
 
 namespace TwitchChaos
 {
-    internal static partial class Twitch
+    internal static class Twitch
     {
-        private static readonly Uri     URI_EventSub    = new Uri("wss://eventsub.wss.twitch.tv/ws");
-        private const string            API_User        = "https://api.twitch.tv/helix/users";
-        private const string            API_Sub         = "https://api.twitch.tv/helix/eventsub/subscriptions";
-        private const string            API_Poll        = "https://api.twitch.tv/helix/polls";
-
-        private class EventSubs
-        {
-            internal const string OnPollBegin       = "channel.poll.begin";
-            internal const string OnPollProgress    = "channel.poll.progress";
-            internal const string OnPollEnd         = "channel.poll.end";
-        }
-
-        private static UserData CurrentUserData     { get; set; } = null;
-        private static Session  CurrentSessionData  { get; set; } = null;
+        private static string ActivePollID = string.Empty;
 
         [Serializable]
-        internal class Poll
+        private class Poll
         {
             internal string     Title       { get; }
             internal int        Duration    { get; }
@@ -60,25 +44,31 @@ namespace TwitchChaos
             }
         }
 
-        internal static void Init(string clientID, string OAuth)
+        internal static void StartWebSocket(string clientID, string OAuth)
         {
-            if (CurrentSocketStatus != SocketStatus.Disconnected)
-                return;
+            if (CurrentSocketState == SocketState.Disconnected)
+            {
+                OnConnectedToSocket += WaitForGame;
+                OnPollEnd           += HandlePollResult;
+                ConnectToWebSocket(clientID, OAuth);
+            }
+        }
 
-            OnPollEnd           += HandlePollResult;
-            OnWebhookConnected  += WaitForGame;
-            StartWebSocket(clientID, OAuth);
+        internal static void EndWebSocket()
+        {
+            DisconnectFromWebSocket();
         }
 
         private async static void WaitForGame()
         {
-            OnWebhookConnected -= WaitForGame;
+            OnConnectedToSocket -= WaitForGame;
 
             while (!TwitchControl.EventCanBeCreated) { await Task.Delay(TimeSpan.FromSeconds(0.1f)); }
-            if (CurrentSocketStatus == SocketStatus.Connected) RunVote(); else OnWebhookConnected += WaitForGame;
+            if (CurrentSocketState == SocketState.Connected)
+                RunVote();
         }
 
-        internal async static void RunVote()
+        private async static void RunVote()
         {
             string[] choices = new string[5];
 
@@ -102,34 +92,45 @@ namespace TwitchChaos
             await StartPoll(poll);
         }
 
-        internal async static Task StartPoll(Poll poll)
+        private async static Task StartPoll(Poll poll)
         {
-            if (CurrentSocketStatus != SocketStatus.Connected)
+            if (CurrentSocketState != SocketState.Connected || CurrentTwitchUserInfo == null)
                 return;
 
             var body = new
             {
-                broadcaster_id  = CurrentUserData.id,
-                title           = poll.Title,
-                choices         = poll.Options,
-                duration        = poll.Duration
+                broadcaster_id = CurrentTwitchUserInfo.id,
+                title       = poll.Title,
+                choices     = poll.Options,
+                duration    = poll.Duration
             };
 
             if (body.choices == null || body.choices.Length == 0)
                 return;
 
-            await SendWebRequest(API_Poll, ClientID, App_OAuth, RequestType.POST, JsonNet.Serialize(body));
+            string reply = await SendWebRequest(URL_API_POLL, RequestType.POST, JsonNet.Serialize(body));
+
+            if (!string.IsNullOrEmpty(reply))
+            {
+                API_PollStart_Reply pollReply = JsonNet.Deserialize<API_PollStart_Reply>(reply);
+                if (pollReply?.data?.FirstOrDefault()?.id != null)
+                    ActivePollID = pollReply.data.FirstOrDefault().id;
+            }
         }
 
-        private async static void HandlePollResult(string winner)
+        private async static void HandlePollResult(string id, string winner)
         {
-            // Verify this is the poll created by chaos
-            Debug($"The winner was: {winner}", DebugType.Error);
-            ChaosEvent chaosEvent = TwitchControl.ChaosEvents.FirstOrDefault(x => x.EventName == winner);
-            if (!(chaosEvent is null))
-                await TwitchControl.WaitAndCreateEvent(chaosEvent);
+            bool isOurPoll = !string.IsNullOrEmpty(ActivePollID) && id == ActivePollID;
+            ActivePollID = string.Empty;
 
-            RunVote();
+            if (isOurPoll)
+            {
+                ChaosEvent chaosEvent = TwitchControl.ChaosEvents.FirstOrDefault(x => x.EventName == winner);
+                if (!(chaosEvent is null))
+                    await TwitchControl.WaitAndCreateEvent(chaosEvent);
+
+                RunVote();
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Json.Net;
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -8,46 +8,51 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine;
 using static TwitchChaos.DebugOutput;
+using static TwitchChaos.TwitchWebReply;
 
 namespace TwitchChaos
 {
-    internal static partial class Twitch
+    internal static class TwitchWebSocket
     {
-        private delegate void PollEnd(string winner);
-        private static event PollEnd OnPollEnd;
+        internal delegate   void    ConnectedToSocket();
+        internal static     event   ConnectedToSocket OnConnectedToSocket;
 
-        private delegate void WebhookConnected();
-        private static event WebhookConnected OnWebhookConnected;
+        internal delegate   void    PollEnd(string id, string winner);
+        internal static     event   PollEnd OnPollEnd;
 
-        private static SocketStatus _currentSocketStatus = SocketStatus.Disconnected;
-        private static SocketStatus CurrentSocketStatus
+        private     static SocketState _currentSocketState = SocketState.Disconnected;
+        internal    static SocketState CurrentSocketState
         {
-            get => _currentSocketStatus;
-            set
+            get => _currentSocketState;
+
+            private set
             {
                 switch (value)
                 {
-                    case SocketStatus.Connected:
-                        if (_currentSocketStatus != SocketStatus.Connected)
+                    case SocketState.Connected:
+                        if (_currentSocketState != value)
                         {
-                            _currentSocketStatus = value;
-                            OnWebhookConnected?.Invoke();
+                            _currentSocketState = value;
+                            CancelToken = new CancellationTokenSource();
+                            OnConnectedToSocket?.Invoke();
                         }
                     break;
 
-                    case SocketStatus.Disconnected:
-                        CurrentUserData     = null;
-                        OnPollEnd           = null;
-                        OnWebhookConnected  = null;
+                    case SocketState.Disconnected:
+                        CurrentTwitchUserInfo   = null;
+                        CancelToken?.Dispose();
+                        CancelToken             = null;
+                        OnConnectedToSocket     = null;
+                        OnPollEnd               = null;
                     break;
                 }
-                _currentSocketStatus = value;
+
+                _currentSocketState = value;
             }
         }
 
-        private enum SocketStatus
+        internal enum SocketState
         {
             Disconnected,
             Disconnecting,
@@ -55,72 +60,91 @@ namespace TwitchChaos
             Connected
         }
 
-        private enum MessageType
-        {
-            session_welcome,
-            notification
-        }
-
-        private enum PollStatus
-        {
-            completed
-        }
-
-        private enum RequestType
+        internal enum RequestType
         {
             POST,
-            GET,
-            PATCH
+            GET
         }
 
-        private static string ClientID  { get; set; } = string.Empty;
-        private static string App_OAuth { get; set; } = string.Empty;
-
-        internal static void StartWebSocket(string clientID, string OAuth)
+        internal static API_Users.Data  CurrentTwitchUserInfo;
+        private static ClientInfo       CurrentClientInfo;
+        private class ClientInfo
         {
-            if (CurrentSocketStatus != SocketStatus.Disconnected)
-                return;
+            internal string ClientID    { get; private set; }
+            internal string OAuth       { get; private set; }
 
-            CurrentSocketStatus = SocketStatus.Connecting;
-
-            ClientID    = clientID;
-            App_OAuth   = OAuth;
-
-            ConnectWebSocket();
+            internal ClientInfo(string ClientID, string OAuth)
+            {
+                this.ClientID   = ClientID;
+                this.OAuth      = OAuth;
+            }
         }
 
-        private static async void ConnectWebSocket()
-        {
-            string response = await SendWebRequest(API_User, ClientID, App_OAuth, RequestType.GET, ignoreSocket: true);
-            if (!string.IsNullOrEmpty(response))
-            {
-                API_Reply_Users broadcaster = Json.Net.JsonNet.Deserialize<API_Reply_Users>(response);
-                CurrentUserData = broadcaster?.data?.FirstOrDefault();
-            }
+        private static SocketReply.Payload.Session CurrentSessionInfo;
 
-            if (CurrentUserData == null)
+        private static CancellationTokenSource CancelToken;
+
+        internal static void ConnectToWebSocket(string clientID, string OAuth)
+        {
+            if (CurrentSocketState == SocketState.Disconnected)
             {
-                CurrentSocketStatus = SocketStatus.Disconnected;
+                CurrentClientInfo = new ClientInfo(clientID, OAuth);
+                Connect();
+            }
+        }
+
+        internal static void DisconnectFromWebSocket()
+        {
+            if (CurrentSocketState == SocketState.Disconnected || CurrentSocketState == SocketState.Disconnecting)
+                return;
+
+            CurrentSocketState = SocketState.Disconnecting;
+            CancelToken?.Cancel();
+        }
+
+        private static async void Connect()
+        {
+            CurrentSocketState = SocketState.Connecting;
+            if (await CreateUserInfo() == null)
+            {
+                CurrentSocketState = SocketState.Disconnected;
                 return;
             }
 
-            using (ClientWebSocket socket = new ClientWebSocket())
+            await RunWebSocket();
+            CurrentSocketState = SocketState.Disconnected;
+        }
+
+        private static async Task RunWebSocket()
+        {
+            using (var socket = new ClientWebSocket())
             {
-                await socket.ConnectAsync(URI_EventSub, CancellationToken.None);
-                if (socket.State != WebSocketState.Open)
+                bool connected = false;
+
+                try
                 {
-                    CurrentSocketStatus = SocketStatus.Disconnected;
+                    await socket.ConnectAsync(new Uri(WSS_EventSub), CancellationToken.None);
+                    connected = socket.State == WebSocketState.Open;
+                }
+                catch
+                {
+                    connected = false;
+                }
+
+                if (!connected)
+                {
+                    CurrentSocketState = SocketState.Disconnected;
                     return;
                 }
 
-                CurrentSocketStatus = SocketStatus.Connected;
-                WebSocketReceiveResult socketReply = null;
-                byte[] buffer = new byte[2048];
+                CurrentSocketState = SocketState.Connected;
 
-                while (CurrentSocketStatus == SocketStatus.Connected && socket.State == WebSocketState.Open)
+                while (CurrentSocketState == SocketState.Connected && socket.State == WebSocketState.Open)
                 {
-                    // Add cancellation token
-                    socketReply = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    byte[] buffer = new byte[2048];
+                    WebSocketReceiveResult socketReply = null;
+
+                    try { socketReply = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancelToken.Token); } catch { break; }
                     if (socketReply == null)
                         continue;
 
@@ -131,20 +155,11 @@ namespace TwitchChaos
                     SocketReply reply = JsonNet.Deserialize<SocketReply>(message);
                     if (reply != null)
                         await HandleReply(reply);
-
-                    // Debug
-                    // -----------------------------------
-                    Debug("-----", DebugType.Warning);
-                    Debug(message, DebugType.Warning);
-                    Debug(reply?.metadata?.message_type, DebugType.Warning);
-                    Debug("-----", DebugType.Warning);
-                    // -----------------------------------
                 }
-                CurrentSocketStatus = SocketStatus.Disconnected;
             }
         }
 
-        private async static Task HandleReply(SocketReply reply)
+        private static async Task HandleReply(SocketReply reply)
         {
             if (reply?.metadata?.message_type == null)
                 return;
@@ -165,31 +180,17 @@ namespace TwitchChaos
             }
         }
 
-        private static void HandlePollEnd(PollEvent pollEvent)
-        {
-            if (pollEvent == null || pollEvent.choices == null || pollEvent.choices.Length == 0 || pollEvent.status != PollStatus.completed.ToString())
-                return;
-
-            int[] votes = new int[pollEvent.choices.Length];
-            for (int i = 0; i < pollEvent.choices.Length; i++) { votes[i] = pollEvent.choices[i].votes; }
-
-            OnPollEnd?.Invoke(pollEvent.choices.First(x => x.votes == votes.Max()).title);
-        }
-
         private async static Task CreateSession(SocketReply reply)
         {
-            if (CurrentSessionData != null)
+            if (CurrentSessionInfo != null || CurrentTwitchUserInfo == null || reply?.payload?.session == null)
                 return;
-            
-            if (reply?.payload?.session != null)
-            {
-                CurrentSessionData = reply.payload.session;
-                if (CurrentSessionData?.id != null)
-                    await Subscribe(EventSubs.OnPollEnd, CurrentUserData.id, CurrentSessionData.id, ClientID, App_OAuth);
-            }
+
+            CurrentSessionInfo = reply.payload.session;
+            if (CurrentSessionInfo?.id != null)
+                await Subscribe(EventSubs.OnPollEnd, CurrentTwitchUserInfo.id, CurrentSessionInfo.id);
         }
 
-        private async static Task Subscribe(string subEvent, string broadcasterID, string sessionID, string clientID, string OAuth)
+        private async static Task Subscribe(string subEvent, string broadcasterID, string sessionID)
         {
             var body = new
             {
@@ -203,41 +204,62 @@ namespace TwitchChaos
                 }
             };
 
-            await SendWebRequest(API_Sub, clientID, OAuth, RequestType.POST, JsonNet.Serialize(body));
+            await SendWebRequest(URL_API_SUB, RequestType.POST, JsonNet.Serialize(body));
         }
 
-        private async static Task<string> SendWebRequest(string URL, string clientID, string OAuth, RequestType requestType, string body = null, bool ignoreSocket = false)
+        private static void HandlePollEnd(SocketReply.Payload.PollEvent pollEvent)
         {
-            if (!ignoreSocket && CurrentSocketStatus != SocketStatus.Connected)
+            if (pollEvent == null || pollEvent.choices == null || pollEvent.choices.Length == 0 || pollEvent.status != PollStatus.completed.ToString())
+                return;
+
+            int[] votes = new int[pollEvent.choices.Length];
+            for (int i = 0; i < pollEvent.choices.Length; i++) { votes[i] = pollEvent.choices[i].votes; }
+
+            OnPollEnd?.Invoke(pollEvent.id, pollEvent.choices.First(x => x.votes == votes.Max()).title);
+        }
+
+        private static async Task<API_Users.Data> CreateUserInfo()
+        {
+            string response = await SendWebRequest(URL_API_USERS, RequestType.GET);
+            if (response == null)
+                return null;
+
+            return CurrentTwitchUserInfo = JsonNet.Deserialize<API_Users>(response)?.data?.FirstOrDefault();
+        }
+
+        internal static async Task<string> SendWebRequest(string URL, RequestType requestType, string body = null)
+        {
+            if (CurrentClientInfo == null)
                 return string.Empty;
 
-            string finalResponse = string.Empty;
+            string requestResponse = string.Empty;
 
             try
             {
-                var request     = (HttpWebRequest)WebRequest.Create(URL);
-                request.Method  = requestType.ToString();
-                request.Headers.Add("Client-Id", clientID);
-                request.Headers.Add("Authorization", $"Bearer {OAuth}");
+                var request = (HttpWebRequest)WebRequest.Create(URL);
+
+                request.Method = requestType.ToString();
+                request.Headers.Add("Client-Id", CurrentClientInfo.ClientID);
+                request.Headers.Add("Authorization", $"Bearer {CurrentClientInfo.OAuth}");
 
                 if (body != null)
                 {
                     request.ContentType = "application/json";
-                    using (var streamWriter = new StreamWriter(await request.GetRequestStreamAsync()))
-                    {
-                        streamWriter.Write(body);
-                    }
+                    using (var streamWriter = new StreamWriter(await request.GetRequestStreamAsync())) { streamWriter.Write(body); }
                 }
 
                 using (var response = (HttpWebResponse)await request.GetResponseAsync())
-                using (var stream   = response.GetResponseStream())
-                using (var reader   = new StreamReader(stream))
+                using (var reader   = new StreamReader(response.GetResponseStream()))
                 {
-                    finalResponse = reader?.ReadToEnd()?.Trim();
+                    requestResponse = reader?.ReadToEnd()?.Trim();
                 }
-            } catch (Exception ex) { UnityEngine.Debug.LogError(ex); }
+            }
+            catch (Exception ex)
+            {
+                Debug($"{ex}", DebugType.Error);
+            }
 
-            return finalResponse ?? string.Empty;
+            return requestResponse ?? string.Empty;
         }
     }
 }

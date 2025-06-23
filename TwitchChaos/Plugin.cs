@@ -1,7 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using System.IO;
-using UnityEngine;
+using TrueBRChaos;
 
 namespace TwitchChaos
 {
@@ -34,8 +34,27 @@ namespace TwitchChaos
             if (ConfigFile.TryGetEntry<string>(ConfigSection, ConfigOAuthKey, out var OAuthEntry))
                 OAuthID = OAuthEntry.Value;
 
-            if (!string.IsNullOrEmpty(ClientAppID) && !string.IsNullOrEmpty(OAuthID))
-                Twitch.Init(ClientAppID, OAuthID);
+            TwitchControl.ControlStatusChanged += OnStatusChanged;
+            StartTwitchControl();
+        }
+
+        private void OnStatusChanged(bool status)
+        {
+            if (status)
+                StartTwitchControl();
+            else if (!status)
+                Twitch.EndWebSocket();
+        }
+
+        private void StartTwitchControl()
+        {
+            if (!string.IsNullOrEmpty(ClientAppID) && !string.IsNullOrEmpty(OAuthID) && TwitchControl.HasTwitchControl)
+                Twitch.StartWebSocket(ClientAppID, OAuthID);
+        }
+
+        public void OnDestroy()
+        {
+            TwitchControl.ControlStatusChanged -= OnStatusChanged;
         }
     }
 }

@@ -61,8 +61,8 @@
     <Compile Include="DebugOutput.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReplyData.cs" />
     <Compile Include="Twitch.cs" />
+    <Compile Include="TwitchWebReply.cs" />
     <Compile Include="TwitchWebSocket.cs" />
   </ItemGroup>
   <ItemGroup>

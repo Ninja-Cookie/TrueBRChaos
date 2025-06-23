@@ -37,6 +37,7 @@ namespace TrueBRChaos
 
         private void RunTest()
         {
+            TwitchControl.SetTwitchControl(!TwitchControl.HasTwitchControl);
             //ChaosManager.CreateChaosEvent(typeof(Events.Event_RandomCharacter));
         }
     }
