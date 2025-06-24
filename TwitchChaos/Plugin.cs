@@ -38,7 +38,6 @@ namespace TwitchChaos
             TwitchControl.OAuth     = OAuthID;
 
             TwitchControl.ControlStatusChanged += OnStatusChanged;
-            StartTwitchControl();
         }
 
         private async void OnStatusChanged(bool status)
