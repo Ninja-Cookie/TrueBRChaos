@@ -186,9 +186,9 @@ namespace TwitchChaos
                 ChaosEvent chaosEvent = TwitchControl.ChaosEvents.FirstOrDefault(x => x.EventName == winner);
                 if (!(chaosEvent is null))
                     await TwitchControl.WaitAndCreateEvent(chaosEvent);
-
-                RunVote();
             }
+
+            RunVote();
         }
     }
 }

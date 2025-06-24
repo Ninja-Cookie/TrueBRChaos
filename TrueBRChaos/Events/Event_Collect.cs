@@ -28,14 +28,15 @@ namespace TrueBRChaos.Events
         public override void OnEventAwake()
         {
             collectEvent    = new GameObject("event_collect_object", typeof(Encounters.Encounter_Collect));
-            encounter       = collectEvent.GetComponent<Encounters.Encounter_Collect>();
+            encounter       = collectEvent?.GetComponent<Encounters.Encounter_Collect>();
 
-            encounter.chaosCaller = this;
+            if (encounter != null)
+                encounter.chaosCaller = this;
         }
 
         public override void OnEventStart()
         {
-            encounter.InitSceneObject();
+            encounter?.InitSceneObject();
         }
 
         public override void OnEventKill()
@@ -43,7 +44,7 @@ namespace TrueBRChaos.Events
             Patches.EventPatch_Collect.event_collect = false;
             if (collectEvent != null)
             {
-                encounter.SetEncounterState(Encounter.EncounterState.OUTRO_SUCCES);
+                encounter?.SetEncounterState(Encounter.EncounterState.OUTRO_SUCCES);
                 Destroy(collectEvent);
             }
         }
