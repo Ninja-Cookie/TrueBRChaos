@@ -69,7 +69,7 @@ namespace TrueBRChaos.UI
 
             GUIGap(0.75f);
 
-            TwitchControl.ClientID = GUIField(TwitchControl.ClientID, "ClientID:", true);
+            TwitchControl.ClientID = GUIField(TwitchControl.ClientID, "App Client ID:", true);
             GUIGap(-0.25f);
             TwitchControl.OAuth = GUIField(TwitchControl.OAuth, "OAuth:", true);
 

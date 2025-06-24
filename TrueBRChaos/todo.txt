@@ -1,4 +1,2 @@
-Check if poll is already active before creating
-Check if channel can even create polls
-
-Don't let attempt to connect / disconnect if not finished connecting / disconnecting
+Check if channel can even create polls, otherwise >
+Setup chat vote version

@@ -139,7 +139,7 @@ namespace TwitchChaos
 
         private async static Task StartPoll(Poll poll)
         {
-            if (TwitchSocket == null || TwitchSocket.CurrentSocketState != SocketState.Connected || TwitchSocket.CurrentTwitchUserInfo == null)
+            if (TwitchSocket == null || TwitchSocket.CurrentSocketState != SocketState.Connected || TwitchSocket.CurrentTwitchUserInfo == null || await IsPollActive())
                 return;
 
             var body = new
@@ -161,6 +161,19 @@ namespace TwitchChaos
                 if (pollReply?.data?.FirstOrDefault()?.id != null)
                     ActivePollID = pollReply.data.FirstOrDefault().id;
             }
+        }
+
+        private static async Task<bool> IsPollActive()
+        {
+            string reply = await TwitchSocket.SendWebRequest($"{URL_API_POLL}?broadcaster_id={TwitchSocket.CurrentTwitchUserInfo.id}", RequestType.GET);
+
+            if (!string.IsNullOrEmpty(reply))
+            {
+                API_PollStart_Reply pollReply = JsonNet.Deserialize<API_PollStart_Reply>(reply);
+                if (pollReply?.data?.FirstOrDefault()?.status != null)
+                    return pollReply.data.First().status.Equals(PollStatus.ACTIVE.ToString(), StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
         }
 
         private async static void HandlePollResult(string id, string winner)

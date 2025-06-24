@@ -318,6 +318,7 @@ namespace TrueBRChaos.UI
         private void ToggleTimer()
         {
             ChaosManager.chaosTimerComp.timerActive = !ChaosManager.chaosTimerComp.timerActive;
+            Commons.ForceChaosDisabled              = !ChaosManager.chaosTimerComp.timerActive;
         }
 
         private void ResetToSafety()
