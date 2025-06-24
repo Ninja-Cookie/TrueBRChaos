@@ -55,13 +55,29 @@ namespace TrueBRChaos.UI
 
         private void GUIFront(int windowID)
         {
-            GUILabel($"Seed: {ChaosManager.Seed}");
+            GUILabel($"Active Seed: {ChaosManager.Seed}");
 
-            if (GUIButton("Enable Chaos",   ChaosManager.chaosTimerComp.timerActive ? Setup.ButtonType.On : Setup.ButtonType.Off)) ToggleTimer();
-            if (GUIButton("Reset Player to Safety", Setup.ButtonType.Off))  ResetToSafety();
-            if (GUIButton("Clear Events",   Setup.ButtonType.Normal))   ClearEvents();
-            if (GUIButton("Reset Seed",     Setup.ButtonType.Normal))   ResetSeed(_seedInt);
-            seed = GUIField(seed);
+            if (GUIButton("Enable Chaos", ChaosManager.chaosTimerComp.timerActive ? Setup.ButtonType.On : Setup.ButtonType.Off)) ToggleTimer();
+
+            GUIGap(0.75f);
+
+            seed = GUIField(seed, "Set Seed:");
+            GUIGap(-0.88f);
+            if (GUIButton("Reset Seed",             Setup.ButtonType.Normal))   ResetSeed(_seedInt);
+            if (GUIButton("Clear Events",           Setup.ButtonType.Normal))   ClearEvents();
+            if (GUIButton("Reset Player to Safety", Setup.ButtonType.Normal))   ResetToSafety();
+
+            GUIGap(0.75f);
+
+            TwitchControl.ClientID = GUIField(TwitchControl.ClientID, "ClientID:", true);
+            GUIGap(-0.25f);
+            TwitchControl.OAuth = GUIField(TwitchControl.OAuth, "OAuth:", true);
+
+            GUIGap(-0.75f);
+
+            if (GUIButton($"Connect Twitch ({TwitchControl.CurrentConnectionState})", TwitchControl.CurrentConnectionState == TwitchControl.ConnectionState.Connected ? Setup.ButtonType.On : Setup.ButtonType.Off)) Connect();
+
+            GUIGap(0.75f);
 
             Cleanup();
         }

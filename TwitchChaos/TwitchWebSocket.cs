@@ -15,11 +15,14 @@ namespace TwitchChaos
 {
     internal sealed class TwitchWebSocket
     {
-        internal delegate void  ConnectedToSocket();
-        internal event          ConnectedToSocket OnConnectedToSocket;
+        //internal delegate void  ConnectedToSocket();
+        //internal event          ConnectedToSocket OnConnectedToSocket;
 
-        internal delegate void  DisconnectedFromSocket();
-        internal event          DisconnectedFromSocket OnDisconnectedFromSocket;
+        //internal delegate void  DisconnectedFromSocket();
+        //internal event          DisconnectedFromSocket OnDisconnectedFromSocket;
+
+        internal delegate void  SocketStateUpdated(SocketState state);
+        internal event          SocketStateUpdated OnSocketStateUpdated;
 
         internal delegate void  PollEnd(string id, string winner);
         internal event          PollEnd OnPollEnd;
@@ -31,33 +34,31 @@ namespace TwitchChaos
 
             private set
             {
+                if (_currentSocketState == value)
+                    return;
+
                 switch (value)
                 {
                     case SocketState.Connected:
-                        if (_currentSocketState != value)
-                        {
-                            _currentSocketState = value;
-                            CancelToken = new CancellationTokenSource();
-                            OnConnectedToSocket?.Invoke();
-                            return;
-                        }
+                        _currentSocketState = value;
+                        CancelToken         = new CancellationTokenSource();
+
+                        //OnConnectedToSocket?.Invoke();
                     break;
 
                     case SocketState.Disconnected:
-                        if (_currentSocketState != value)
-                        {
-                            CurrentTwitchUserInfo   = null;
-                            CancelToken?.Dispose();
-                            CancelToken             = null;
-                            OnConnectedToSocket     = null;
-                            OnPollEnd               = null;
+                        CurrentTwitchUserInfo   = null;
+                        CancelToken?.Dispose();
+                        CancelToken             = null;
+                        //OnConnectedToSocket     = null;
+                        OnPollEnd               = null;
 
-                            OnDisconnectedFromSocket?.Invoke();
-                        }
+                        //OnDisconnectedFromSocket?.Invoke();
                     break;
                 }
 
                 _currentSocketState = value;
+                OnSocketStateUpdated?.Invoke(CurrentSocketState);
             }
         }
 

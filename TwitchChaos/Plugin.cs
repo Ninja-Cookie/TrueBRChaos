@@ -33,23 +33,42 @@ namespace TwitchChaos
 
             if (ConfigFile.TryGetEntry<string>(ConfigSection, ConfigOAuthKey, out var OAuthEntry))
                 OAuthID = OAuthEntry.Value;
+            
+            TwitchControl.ClientID  = ClientAppID;
+            TwitchControl.OAuth     = OAuthID;
 
             TwitchControl.ControlStatusChanged += OnStatusChanged;
             StartTwitchControl();
         }
 
-        private void OnStatusChanged(bool status)
+        private async void OnStatusChanged(bool status)
         {
             if (status)
                 StartTwitchControl();
             else if (!status)
-                Twitch.EndWebSocket();
+                await Twitch.EndWebSocket();
         }
 
         private void StartTwitchControl()
         {
+            ClientAppID = TwitchControl.ClientID;
+            OAuthID     = TwitchControl.OAuth;
+
+            SaveConfig();
+
             if (!string.IsNullOrEmpty(ClientAppID) && !string.IsNullOrEmpty(OAuthID) && TwitchControl.HasTwitchControl)
                 Twitch.StartWebSocket(ClientAppID, OAuthID);
+        }
+
+        private void SaveConfig()
+        {
+            if (ConfigFile.TryGetEntry<string>(ConfigSection, ConfigClientKey, out var clientEntry))
+                clientEntry.Value = ClientAppID;
+
+            if (ConfigFile.TryGetEntry<string>(ConfigSection, ConfigOAuthKey, out var OAuthEntry))
+                OAuthEntry.Value = OAuthID;
+
+            ConfigFile.Save();
         }
 
         public void OnDestroy()

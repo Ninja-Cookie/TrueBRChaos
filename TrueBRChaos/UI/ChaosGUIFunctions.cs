@@ -1,8 +1,6 @@
 ﻿using Reptile;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.ProBuilder;
-using static Rewired.ComponentControls.Effects.RotateAroundAxis;
 
 namespace TrueBRChaos.UI
 {
@@ -30,14 +28,15 @@ namespace TrueBRChaos.UI
         private const float Seperation  = 4f;
 
         private GUIStyle    TEXT;
+        private GUIStyle    TEXTABOVE;
         private GUIStyle    WINDOW;
         private GUIStyle    BUTTON;
         private GUIStyle    BUTTON_OFF;
         private GUIStyle    BUTTON_ON;
         private GUIStyle    FIELD;
 
-        private int     IndexLine   = 0;
-        private int     FinalIndex  = 0;
+        private float   IndexLine   = 0;
+        private float   FinalIndex  = 0;
 
         private Rect    ElementRect = new Rect(WindowMarginIW, 0f, 0f, ElementH);
         private float   ElementY    => WindowMarginIH + (IndexLine++ * (ElementH + (IndexLine == 0 ? 0f : Seperation)));
@@ -48,6 +47,26 @@ namespace TrueBRChaos.UI
             {
                 ElementRect.y       = ElementY;
                 ElementRect.width   = ElementW;
+                return ElementRect;
+            }
+        }
+
+        private Rect ElementRectFinalSmall
+        {
+            get
+            {
+                ElementRect.y       = ElementY - (ElementH * 0.75f);
+                ElementRect.width   = ElementW;
+                return ElementRect;
+            }
+        }
+
+        private Rect ElementRectFinalSmaller
+        {
+            get
+            {
+                ElementRect.y = ElementY - ElementH;
+                ElementRect.width = ElementW;
                 return ElementRect;
             }
         }
@@ -68,6 +87,7 @@ namespace TrueBRChaos.UI
                 return;
 
             TEXT        = Setup.Text(FontBundle);
+            TEXTABOVE   = Setup.TextAbove(FontBundle);
             WINDOW      = Setup.Window();
             BUTTON      = Setup.Button(FontBundle, Setup.ButtonType.Normal);
             BUTTON_OFF  = Setup.Button(FontBundle, Setup.ButtonType.Off);
@@ -81,7 +101,8 @@ namespace TrueBRChaos.UI
         private static class Setup
         {
             private static readonly Color TextColor = Color.white;
-            private static int FontSize = 25;
+            private static int FontSize = 23;
+            private static int FontSizeSmall = 15;
 
             private static readonly Texture2D Normal_BT     = new Texture2D(1, 1);
             private static readonly Texture2D Hover_BT      = new Texture2D(1, 1);
@@ -118,6 +139,24 @@ namespace TrueBRChaos.UI
                 text.normal .textColor  = TextColor;
                 text.hover  .textColor  = TextColor;
                 text.active .textColor  = TextColor;
+
+                return text;
+            }
+
+            internal static GUIStyle TextAbove(ChaosAssetHandler.BundleInfo fontBundle)
+            {
+                GUIStyle text = new GUIStyle();
+                if (ChaosAssetHandler.TryGetGameAsset<Font>(fontBundle, out var font))
+                    text.font = font;
+
+                text.alignment          = TextAnchor.MiddleCenter;
+                text.wordWrap           = false;
+                text.fontSize           = FontSizeSmall;
+                text.fontStyle          = FontStyle.Bold;
+
+                text.normal.textColor   = TextColor;
+                text.hover.textColor    = TextColor;
+                text.active.textColor   = TextColor;
 
                 return text;
             }
@@ -220,6 +259,11 @@ namespace TrueBRChaos.UI
             GUI.Label(ElementRectLabel, text, TEXT);
         }
 
+        private void GUIGap(float amount = 0.25f)
+        {
+            IndexLine += amount;
+        }
+
         private bool GUIButton(string text, Setup.ButtonType buttonType)
         {
             GUIStyle style = BUTTON;
@@ -236,6 +280,16 @@ namespace TrueBRChaos.UI
         private string GUIField(string text)
         {
             return GUI.TextField(ElementRectFinal, text, FIELD);
+        }
+
+        private string GUIField(string text, string title, bool secret = false)
+        {
+            GUI.Label(ElementRectFinalSmall, title, TEXTABOVE);
+
+            if (secret)
+                return GUI.PasswordField(ElementRectFinalSmaller, text, "*"[0], FIELD);
+
+            return GUI.TextField(ElementRectFinalSmaller, text, FIELD);
         }
 
         private void Cleanup()
@@ -271,6 +325,11 @@ namespace TrueBRChaos.UI
             PlayerSpawner playerSpawner = Commons.SceneObjectsRegister?.playerSpawners?.First();
             if (Commons.Player != null && playerSpawner != null)
                 Commons.Player.transform.position = playerSpawner.transform.position;
+        }
+
+        private void Connect()
+        {
+            TwitchControl.SetTwitchControl(!TwitchControl.IsConnectedToTwitch);
         }
     }
 }

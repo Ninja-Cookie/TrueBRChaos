@@ -46,31 +46,55 @@ namespace TwitchChaos
 
         private static TwitchWebSocket TwitchSocket;
 
+        private static async void OnStateChanged(SocketState state)
+        {
+            UpdateControlState(state);
+
+            switch (state)
+            {
+                case SocketState.Connected: 
+                    OnConnected();
+                break;
+
+                case SocketState.Disconnected:
+                    await EndWebSocket();
+                break;
+            }
+        }
+
+        private static void UpdateControlState(SocketState state)
+        {
+            if (Enum.TryParse<TwitchControl.ConnectionState>(state.ToString(), true, out var connectionState) && TwitchControl.CurrentConnectionState != connectionState)
+                TwitchControl.CurrentConnectionState = connectionState;
+        }
+
         internal static void StartWebSocket(string clientID, string OAuth)
         {
             if (TwitchSocket == null)
             {
                 TwitchSocket = new TwitchWebSocket();
 
-                TwitchSocket.OnConnectedToSocket        += OnConnected;
-                TwitchSocket.OnDisconnectedFromSocket   += EndWebSocket;
+                TwitchSocket.OnSocketStateUpdated       += OnStateChanged;
                 TwitchSocket.OnPollEnd                  += HandlePollResult;
                 TwitchSocket.ConnectToWebSocket(clientID, OAuth);
             }
         }
 
-        internal static async void EndWebSocket()
+        internal static async Task EndWebSocket()
         {
             if (TwitchSocket == null)
                 return;
 
-            TwitchSocket.OnConnectedToSocket        -= WaitForGame;
-            TwitchSocket.OnDisconnectedFromSocket   -= EndWebSocket;
+            UpdateControlState(SocketState.Disconnecting);
+
+            TwitchSocket.OnSocketStateUpdated       -= OnStateChanged;
             TwitchSocket.OnPollEnd                  -= HandlePollResult;
 
             await TwitchSocket.DisconnectFromWebSocket();
             TwitchControl.IsConnectedToTwitch = false;
             TwitchSocket = null;
+
+            UpdateControlState(SocketState.Disconnected);
         }
 
         private static void OnConnected()
@@ -83,8 +107,6 @@ namespace TwitchChaos
         {
             if (TwitchSocket == null)
                 return;
-
-            TwitchSocket.OnConnectedToSocket -= WaitForGame;
 
             while (!TwitchControl.EventCanBeCreated) { await Task.Delay(TimeSpan.FromSeconds(0.1f)); }
             if (TwitchSocket != null && TwitchSocket.CurrentSocketState == SocketState.Connected)
